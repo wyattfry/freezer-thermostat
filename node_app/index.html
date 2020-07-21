@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<script src="https://cdn.anychart.com/releases/8.7.1/js/anychart-base.min.js" type="text/javascript"></script>
+	<title>Freezer Temp</title>
+</head>
+
+<body>
+	<h1>Freezer Temp</h1>
+	<p>
+		Current temperature: <span id="temp-span">(getting data from sensor)</span>
+	</p>
+	<p>
+		Current state: <span id="state-span">(getting data from gpio)</span>
+	</p>
+	<div id="container" style="width: 500px; height: 400px;"></div>
+	<script>
+		var sensorId = "28-00000b91bae7";
+
+		// Setup chart
+		var temperatureData = [];
+		var chart = anychart.line();
+		var intervalInSeconds = 30;
+		chart.title("Temperature over time");
+		chart.container("container");
+
+		function getTemperatureHistory(callback) {
+			fetch("/temperature-history")
+				.then(response => response.json())
+				.then(data => callback(data));
+		}
+
+		function getCoolingState(callback) {
+			fetch("/state")
+				.then(response => response.json())
+				.then(data => callback(data));
+		}
+
+		function updateView(temperature, state) {
+			var fahrenheit = temperature * (9 / 5) + 32
+			document.querySelector("span#temp-span").innerText = temperature + "°C, " + fahrenheit.toFixed(1) + "°F";
+			document.querySelector("span#state-span").innerText = state.isCooling ? "Running / Cooling" : "Not Running";
+		}
+
+		function readDisplayLoop() {
+			getTemperatureHistory(temperatureData => {
+				getCoolingState(state => {
+					updateView(temperatureData[temperatureData.length - 1].tempC, state);
+				});
+				chart.data(temperatureData);
+				chart.draw();
+			});
+		}
+
+		readDisplayLoop();
+
+		setInterval(readDisplayLoop, intervalInSeconds * 1000);
+	</script>
+</body>
+
+</html>
