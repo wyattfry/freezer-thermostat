@@ -20,8 +20,24 @@ app.get('/state', (req, res) => {
 });
 
 app.get('/temperature-history', (req, res) => {
-	database.query("select datetime, tempC from freezer.temperature order by datetime desc limit 500")
-    	.then(rows => res.send(JSON.stringify(rows.slice(0, 500).reverse())));
+    let parsedMinutes = Number.parseInt(req.query.minutes);
+    const minimumMinutes = 1;
+    const maximumMinutes = 480;
+    if (parsedMinutes < minimumMinutes || parsedMinutes > maximumMinutes) {
+        res.statusCode = 400;
+        res.statusMessage = `Temperature history minutes must be an integer between ${minimumMinutes} and ${maximumMinutes} (inclusive).`;
+        res.send();
+        return;
+    }
+    const defaultMinutes = 90;
+    const minutes = parsedMinutes || defaultMinutes;
+
+    database.query("select datetime, tempC from freezer.temperature order by datetime desc limit ?", [minutes])
+        .then(rows => res.send(JSON.stringify(rows.slice(0, minutes).reverse())))
+        .catch(error => {
+            console.error(error);
+            res.status(500).send()
+        });
 });
 
 app.get('/', (req, res) => {

@@ -5,6 +5,11 @@
 	<meta charset="UTF-8">
 	<script src="https://cdn.anychart.com/releases/8.7.1/js/anychart-base.min.js" type="text/javascript"></script>
 	<title>Freezer Temp</title>
+	<style>
+		form label {
+			display: block;
+		}
+	</style>
 </head>
 
 <body>
@@ -15,9 +20,33 @@
 	<p>
 		Current state: <span id="state-span">(getting data from gpio)</span>
 	</p>
+	<p>
+		Timespan:
+		<form action="">
+			<label><input type="radio" name="timespan" value="15" onclick="radioClick(15)">15 minutes</label>
+			<label><input type="radio" name="timespan" value="30" onclick="radioClick(30)">30 minutes</label>
+			<label><input type="radio" name="timespan" value="60" onclick="radioClick(60)">1 hour</label>
+			<label><input type="radio" name="timespan" value="180" onclick="radioClick(180)">3 hours</label>
+			<label><input type="radio" name="timespan" value="480" onclick="radioClick(480)">8 hours</label>
+		</form>
+	</p>
 	<div id="container" style="width: 500px; height: 400px;"></div>
 	<script>
 		var sensorId = "28-00000b91bae7";
+
+		let minutesOfHistory = null;
+
+		// Trigger default timespan, 3 hours
+		document.getElementsByTagName("input")[3].click();
+
+		function radioClick(minutes) {
+			const inputs = Array.from(document.getElementsByTagName("input"));
+			inputs.forEach(x => x.setAttribute("disabled", "false"));
+			minutesOfHistory = minutes;
+			readDisplayLoop(() => {
+				inputs.forEach(x => x.removeAttribute("disabled"));
+			});
+		}
 
 		// Setup chart
 		var temperatureData = [];
@@ -26,8 +55,12 @@
 		chart.title("Temperature over time");
 		chart.container("container");
 
-		function getTemperatureHistory(callback) {
-			fetch("/temperature-history")
+		function getTemperatureHistory(callback, minutes) {
+			let url = "/temperature-history"
+			if (!!minutes) {
+				url += "?minutes=" + minutes;
+			}
+			fetch(url)
 				.then(response => response.json())
 				.then(data => callback(data));
 		}
@@ -44,14 +77,17 @@
 			document.querySelector("span#state-span").innerText = state.isCooling ? "Running / Cooling" : "Not Running";
 		}
 
-		function readDisplayLoop() {
+		function readDisplayLoop(callback) {
 			getTemperatureHistory(temperatureData => {
 				getCoolingState(state => {
 					updateView(temperatureData[temperatureData.length - 1].tempC, state);
 				});
 				chart.data(temperatureData);
 				chart.draw();
-			});
+
+				// do things when reading is done
+				!!callback && callback();
+			}, minutesOfHistory);
 		}
 
 		readDisplayLoop();
