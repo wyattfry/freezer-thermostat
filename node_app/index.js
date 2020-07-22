@@ -7,16 +7,16 @@ const gpiop = require('rpi-gpio').promise;
 
 const relay_pin = 11;
 gpiop.setup(relay_pin, gpiop.DIR_OUT);
-    // .then(() => {
-    //     return gpiop.read(relay_pin)
-    // })
-    // .catch((err) => {
-    //     console.log('Error: ', err.toString())
-    // });
 
 app.get('/state', (req, res) => {
 	gpiop.read(relay_pin)
-		.then(data => res.send(JSON.stringify({"isCooling": data})));
+        .then(data => res.send(JSON.stringify({"isCooling": data})))
+        .catch(error => {
+            res.statusCode = 500;
+            res.statusMessage = "Error reading from GPIO, i.e. cooling state. " + error;
+            res.send();
+            return;
+        });
 });
 
 app.get('/temperature-history', (req, res) => {
@@ -40,8 +40,11 @@ app.get('/temperature-history', (req, res) => {
         });
 });
 
+app.get('/favicon.ico', (req, res) => {
+	res.sendFile(path.join(__dirname + '/favicon.ico'));
+});
+
 app.get('/', (req, res) => {
-	console.log('got request');
 	res.sendFile(path.join(__dirname + '/index.html'));
 });
 

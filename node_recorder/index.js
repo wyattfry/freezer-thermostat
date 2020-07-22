@@ -4,7 +4,7 @@ const database = require('./database.js');
 var gpiop = require('rpi-gpio').promise;
 
 const config = {
-  startCoolingTriggerTempC: -11.3,
+  startCoolingTriggerTempC: -11,
   stopCoolingTriggerTempC: -12,
   minutesBetweenReadings: 1,
 };

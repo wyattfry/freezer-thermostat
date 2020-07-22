@@ -4,6 +4,10 @@
 <head>
 	<meta charset="UTF-8">
 	<script src="https://cdn.anychart.com/releases/8.7.1/js/anychart-base.min.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 	<title>Freezer Temp</title>
 	<style>
 		form label {
@@ -13,34 +17,54 @@
 </head>
 
 <body>
-	<h1>Freezer Temp</h1>
-	<p>
-		Current temperature: <span id="temp-span">(getting data from sensor)</span>
-	</p>
-	<p>
-		Current state: <span id="state-span">(getting data from gpio)</span>
-	</p>
-	<p>
-		Timespan:
-		<form action="">
-			<label><input type="radio" name="timespan" value="15" onclick="radioClick(15)">15 minutes</label>
-			<label><input type="radio" name="timespan" value="30" onclick="radioClick(30)">30 minutes</label>
-			<label><input type="radio" name="timespan" value="60" onclick="radioClick(60)">1 hour</label>
-			<label><input type="radio" name="timespan" value="180" onclick="radioClick(180)">3 hours</label>
-			<label><input type="radio" name="timespan" value="480" onclick="radioClick(480)">8 hours</label>
-		</form>
-	</p>
-	<div id="container" style="width: 500px; height: 400px;"></div>
+	<div class="container">
+		<h1>Temperature Monitor</h1>
+		<h2>Basement Freezer</h2>
+
+		<div class="row justify-content-center my-5">
+			<div class="col-auto">
+				<table class="table table-responsive">
+					<tbody>
+						<tr>
+							<td>Current temperature:</td><td><span id="temp-span">(getting data from sensor)</span></td>
+						</tr>
+						<tr>
+							<td>Start cooling trigger temp:</td><td>-11°C, 12.2°F</td>
+						</tr>
+						<tr>
+							<td>Stop cooling trigger temp:</td><td>-12°C, 10.4°F</td>
+						</tr>
+						<tr>
+							<td>Current state:</td><td><span id="state-span">(getting data from controller)</span></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<div class="row justify-content-center">
+			<div class="btn-group" role="group" aria-label="Basic example">
+				<button type="button" class="btn btn-secondary" onclick="radioClick(15)">15 minutes</button>
+				<button type="button" class="btn btn-secondary" onclick="radioClick(30)">30 minutes</button>
+				<button type="button" class="btn btn-secondary" onclick="radioClick(60)">1 hour</button>
+				<button id="default-timespan" type="button" class="btn btn-secondary" onclick="radioClick(180)">3 hour</button>
+				<button type="button" class="btn btn-secondary" onclick="radioClick(480)">8 hour</button>
+			</div>
+		</div>
+
+		<div id="chart-container" style="width: 100%; height: 400px;"></div>
+		Favicon made by <a href="https://www.flaticon.com/authors/vitaly-gorbachev" title="Vitaly Gorbachev">Vitaly Gorbachev</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
+	</div>
 	<script>
 		var sensorId = "28-00000b91bae7";
 
 		let minutesOfHistory = null;
 
 		// Trigger default timespan, 3 hours
-		document.getElementsByTagName("input")[3].click();
+		document.querySelector("#default-timespan").click();
 
 		function radioClick(minutes) {
-			const inputs = Array.from(document.getElementsByTagName("input"));
+			const inputs = Array.from(document.getElementsByTagName("button"));
 			inputs.forEach(x => x.setAttribute("disabled", "false"));
 			minutesOfHistory = minutes;
 			readDisplayLoop(() => {
@@ -52,8 +76,8 @@
 		var temperatureData = [];
 		var chart = anychart.line();
 		var intervalInSeconds = 30;
-		chart.title("Temperature over time");
-		chart.container("container");
+		// chart.title("Temperature over time");
+		chart.container("chart-container");
 
 		function getTemperatureHistory(callback, minutes) {
 			let url = "/temperature-history"
@@ -67,22 +91,70 @@
 
 		function getCoolingState(callback) {
 			fetch("/state")
-				.then(response => response.json())
-				.then(data => callback(data));
+				.then(response => {
+					if (response.status === 500) {
+						callback(response.statusText, null);
+						return;
+					}
+					return response.json()
+				})
+				.then(data => callback(null, data));
 		}
 
-		function updateView(temperature, state) {
+		function updateCurrentTemperatureView(error, temperature) {
+			if (!!error) {
+				document.querySelector("span#temp-span").innerText = "Error retrieving current temperature.";
+				return;
+			}
 			var fahrenheit = temperature * (9 / 5) + 32
 			document.querySelector("span#temp-span").innerText = temperature + "°C, " + fahrenheit.toFixed(1) + "°F";
-			document.querySelector("span#state-span").innerText = state.isCooling ? "Running / Cooling" : "Not Running";
+		}
+
+		function updateStateView(error, state) {
+			if (!!error) {
+				document.querySelector("span#state-span").innerText = "Error retrieving current cooling state.";
+				return;
+			}
+			if (!!state) {
+				document.querySelector("span#state-span").innerText = state.isCooling ? "Running / Cooling" : "Not Running";
+			}
 		}
 
 		function readDisplayLoop(callback) {
 			getTemperatureHistory(temperatureData => {
-				getCoolingState(state => {
-					updateView(temperatureData[temperatureData.length - 1].tempC, state);
+				updateCurrentTemperatureView(null, temperatureData[temperatureData.length - 1].tempC);
+				getCoolingState((error, state) => {
+					if (!!error) {
+						updateStateView(error);
+						return;
+					}
+					updateStateView(null, state);
 				});
 				chart.data(temperatureData);
+
+				// set line markers
+				var lineMarkerHigh = chart.lineMarker(0);
+				lineMarkerHigh.value(-11);
+				lineMarkerHigh.stroke({
+					// set stroke thickness
+					thickness: 2,
+					// set stroke color
+					color: "#0D0",
+					// set dashes and gaps
+					dash: "2 4"
+				});
+
+				var lineMarkerLow = chart.lineMarker(1);
+				lineMarkerLow.value(-12);
+				lineMarkerLow.stroke({
+					// set stroke thickness
+					thickness: 2,
+					// set stroke color
+					color: "#0D0",
+					// set dashes and gaps
+					dash: "2 4"
+				});
+
 				chart.draw();
 
 				// do things when reading is done
