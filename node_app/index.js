@@ -36,7 +36,8 @@ app.get('/temperature-history', (req, res) => {
         .then(rows => res.send(JSON.stringify(rows.slice(0, minutes).reverse())))
         .catch(error => {
             console.error(error);
-            res.status(500).send()
+            res.statusMessage = error;
+            res.status(500).send();
         });
 });
 

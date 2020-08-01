@@ -40,15 +40,21 @@ function readAndRecord() {
 
     state.currentTempC = celsius;
 
-    console.log(state, config);
-
     if (state.currentTempC > config.startCoolingTriggerTempC) {
-      startCooling();
+      state.isCooling().then(relayOn => {
+        if (!relayOn) {
+          startCooling();
+        }
+      });
       return;
     }
 
     if (state.currentTempC < config.stopCoolingTriggerTempC) {
-      stopCooling();
+      state.isCooling().then(relayOn => {
+        if (relayOn) {
+          stopCooling();
+        }
+      });
       return;
     }
   });
@@ -68,8 +74,9 @@ function CtoF(tempC) {
 function startCooling() {
   gpiop.write(relay_pin, true)
     .then(() => {
-      state.isCooling = true;
-      console.log("Start Cooling. Current temp:", state.currentTempC);
+      state.isCooling().then(pinState => {
+        console.log(`${new Date().toJSON()} Start cooling. Current temp: ${state.currentTempC}, isCooling: ${pinState}, start temp: ${config.startCoolingTriggerTempC}°C, stop temp: ${config.stopCoolingTriggerTempC}°C`);
+      });
     })
     .catch((err) => {
       console.log("Failed to turn on relay to start cooling", err);
@@ -80,8 +87,9 @@ function startCooling() {
 function stopCooling() {
   gpiop.write(relay_pin, false)
     .then( () => {
-      state.isCooling = false;
-      console.log("Stop Cooling. Current temp:", state.currentTempC);
+      state.isCooling().then(pinState => {
+        console.log(`${new Date().toJSON()} Stop cooling. Current temp: ${state.currentTempC}°C, isCooling: ${pinState}, start temp: ${config.startCoolingTriggerTempC}°C, stop temp: ${config.stopCoolingTriggerTempC}°C`);
+      });
     })
     .catch((err) => {
       console.log("Failed to turn off relay to stop cooling", err);

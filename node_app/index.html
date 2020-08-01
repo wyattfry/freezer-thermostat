@@ -18,22 +18,31 @@
 	<div class="container">
 		<p class="h1">Temperature Monitor</p>
 		<p class="h2">Basement Freezer</p>
+		<div class="row justify-content-center mb-4">
+			<p class="small">these buttons don't work yet, just put them here to remind myself to finish making them.</p>
+		</div>
+		<div class="row justify-content-center mb-4">
+			<div class="btn-group" role="group" aria-label="Basic example">
+				<button type="button" class="btn btn-secondary" onclick="">Celsius</button>
+				<button type="button" class="btn btn-secondary" onclick="">Fahrenheit</button>
+			</div>
+		</div>
 
 		<div class="row justify-content-center my-5">
 			<div class="col-auto">
 				<table class="table table-responsive">
 					<tbody>
 						<tr>
-							<td>Current temperature:</td><td><span id="temp-span">(getting data from sensor)</span></td>
+							<td>Current temperature:</td><td class="text-right" ><span id="temp-span">(getting data from sensor)</span></td>
 						</tr>
 						<tr>
-							<td>Start cooling trigger temp:</td><td>-11°C, 12.2°F</td> <!-- TODO Get this from backend, from recorder -->
+							<td>Start cooling trigger temp:</td><td class="text-right">-11°C, 12.2°F</td> <!-- TODO Get this from backend, from recorder -->
 						</tr>
 						<tr>
-							<td>Stop cooling trigger temp:</td><td>-12°C, 10.4°F</td> <!-- TODO Get this from backend, from recorder -->
+							<td>Stop cooling trigger temp:</td><td class="text-right">-12°C, 10.4°F</td> <!-- TODO Get this from backend, from recorder -->
 						</tr>
 						<tr>
-							<td>Current state:</td><td><span id="state-span">(getting data from controller)</span></td>
+							<td>Current state:</td><td class="text-right" ><span id="state-span">(getting data from controller)</span></td>
 						</tr>
 					</tbody>
 				</table>
@@ -42,11 +51,11 @@
 
 		<div class="row justify-content-center mb-4">
 			<div class="btn-group" role="group" aria-label="Basic example">
-				<button type="button" class="btn btn-secondary" onclick="radioClick(15)">15m</button>
-				<button type="button" class="btn btn-secondary" onclick="radioClick(30)">30m</button>
-				<button type="button" class="btn btn-secondary" onclick="radioClick(60)">1h</button>
-				<button id="default-timespan" type="button" class="btn btn-secondary" onclick="radioClick(180)">3h</button>
 				<button type="button" class="btn btn-secondary" onclick="radioClick(480)">8h</button>
+				<button type="button" class="btn btn-secondary" onclick="radioClick(180)">3h</button>
+				<button type="button" class="btn btn-secondary" onclick="radioClick(60)">1h</button>
+				<button type="button" class="btn btn-secondary" onclick="radioClick(30)">30m</button>
+				<button type="button" class="btn btn-secondary" onclick="radioClick(15)">15m</button>
 			</div>
 		</div>
 
@@ -61,9 +70,6 @@
 		var sensorId = "28-00000b91bae7";
 
 		let minutesOfHistory = null;
-
-		// Trigger default timespan, 3 hours
-		document.querySelector("#default-timespan").click();
 
 		function radioClick(minutes) {
 			const inputs = Array.from(document.getElementsByTagName("button"));
@@ -87,7 +93,12 @@
 				url += "?minutes=" + minutes;
 			}
 			fetch(url)
-				.then(response => response.json())
+				.then(response => {
+					if (response.status !== 200) {
+						callback(null, "Failed to fetch temperature history.");
+					}
+					return response.json();
+				})
 				.then(data => callback(data));
 		}
 
@@ -123,7 +134,10 @@
 		}
 
 		function readDisplayLoop(callback) {
-			getTemperatureHistory(temperatureData => {
+			getTemperatureHistory((temperatureData, err) => {
+				if (err) {
+					updateCurrentTemperatureView("Failed to get temperature data.");
+				}
 				updateCurrentTemperatureView(null, temperatureData[temperatureData.length - 1].tempC);
 				getCoolingState((error, state) => {
 					if (!!error) {
