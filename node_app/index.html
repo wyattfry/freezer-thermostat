@@ -19,40 +19,14 @@
 </head>
 
 <body>
-	<div id="r"></div>
 	<div class="container">
 		<p class="h1">Temperature Monitor</p>
 		<p class="h2">Basement Freezer</p>
 		<div class="row justify-content-center mb-4">
 			<p class="small">these buttons don't work yet, just put them here to remind myself to finish making them.</p>
 		</div>
-		<div class="row justify-content-center mb-4">
-			<div class="btn-group" role="group" aria-label="Basic example">
-				<button type="button" class="btn btn-secondary" onclick="">Celsius</button>
-				<button type="button" class="btn btn-secondary" onclick="">Fahrenheit</button>
-			</div>
-		</div>
-
-		<div class="row justify-content-center my-5">
-			<div class="col-auto">
-				<table class="table table-responsive">
-					<tbody>
-						<tr>
-							<td>Current temperature:</td><td class="text-right" ><span id="temp-span">(getting data from sensor)</span></td>
-						</tr>
-						<tr>
-							<td>Start cooling trigger temp:</td><td class="text-right">-11°C, 12.2°F</td> <!-- TODO Get this from backend, from recorder -->
-						</tr>
-						<tr>
-							<td>Stop cooling trigger temp:</td><td class="text-right">-12°C, 10.4°F</td> <!-- TODO Get this from backend, from recorder -->
-						</tr>
-						<tr>
-							<td>Current state:</td><td class="text-right" ><span id="state-span">(getting data from controller)</span></td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+		
+		<div id="root"></div>
 
 		<div class="row justify-content-center mb-4">
 			<div class="btn-group" role="group" aria-label="Basic example">
@@ -71,7 +45,7 @@
 		</div>
 	</div>
 
-	<script src="like_button.js"></script>
+	<script src="like_button.js" type="text/babel"></script>
 	<script>
 		var sensorId = "28-00000b91bae7"; // TODO: just take average of all sensors (even though there's only one)
 
