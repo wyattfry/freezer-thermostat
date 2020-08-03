@@ -45,6 +45,10 @@ app.get('/favicon.ico', (req, res) => {
 	res.sendFile(path.join(__dirname + '/favicon.ico'));
 });
 
+app.get('/like_button.js', (req, res) => {
+	res.sendFile(path.join(__dirname + '/like_button.js'));
+});
+
 app.get('/', (req, res) => {
 	res.sendFile(path.join(__dirname + '/index.html'));
 });
