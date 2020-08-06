@@ -1,0 +1,29 @@
+version: '3.4'
+services:
+  frontend:
+    build: frontend/
+    depends_on:
+      - mariadb
+    ports:
+      - "3001:80"
+
+  worker:
+    build: worker/
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:10.2
+    environment:
+      MYSQL_ROOT_PASSWORD: aHqz2bs5UIWZyMXHGedW
+      MYSQL_DATABASE: freezer
+      MYSQL_USER: sa
+      MYSQL_PASSWORD: aHqz2bs5UIWZyMXHGedW
+    logging:
+      options:
+        tag: "{{.DaemonName}}(image={{.ImageName}};name={{.Name}};id={{.ID}})"
+    restart: on-failure
+    ports:
+      - "3306:3306"
+    expose:
+      - 3306

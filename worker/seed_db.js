@@ -1,0 +1,1 @@
+// TODO check if db is set up with proper tables, if not, and if env === dev, then seed with sample data

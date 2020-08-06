@@ -1,21 +1,29 @@
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = 80;
 const path = require('path');
 const database = require('./database.js');
-const gpiop = require('rpi-gpio').promise;
-
-const relay_pin = 11;
-gpiop.setup(relay_pin, gpiop.DIR_OUT);
 
 app.get('/state', (req, res) => {
-	gpiop.read(relay_pin)
-        .then(data => res.send(JSON.stringify({"isCooling": data})))
+	// gpiop.read(relay_pin)
+    //     .then(data => res.send(JSON.stringify({"isCooling": data})))
+    //     .catch(error => {
+    //         res.statusCode = 500;
+    //         res.statusMessage = "Error reading from GPIO, i.e. cooling state. " + error;
+    //         res.send();
+    //         return;
+    //     });
+    database.query("select isCooling from freezer.state order by datetime desc limit 1")
+        .then(rows => {
+            const body = {
+                isCooling: rows[0],
+            };
+            res.send(JSON.stringify(body));
+        })
         .catch(error => {
-            res.statusCode = 500;
-            res.statusMessage = "Error reading from GPIO, i.e. cooling state. " + error;
-            res.send();
-            return;
+            console.error(error);
+            res.statusMessage = error;
+            res.status(500).send();
         });
 });
 
@@ -49,4 +57,4 @@ app.get('/', (req, res) => {
 	res.sendFile(path.join(__dirname + '/index.html'));
 });
 
-app.listen(port, () => console.log('Listening at http://localhost:3000'))
+app.listen(port, () => console.log('Listening at http://localhost:' + port))
