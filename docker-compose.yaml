@@ -9,6 +9,9 @@ services:
 
   worker:
     build: worker/
+    volumes:
+      - ./worker:/usr/src/app
+      - /usr/src/app/node_modules
     depends_on:
       - mariadb
 

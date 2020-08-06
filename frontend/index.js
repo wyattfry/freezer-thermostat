@@ -15,9 +15,8 @@ app.get('/state', (req, res) => {
     //     });
     database.query("select isCooling from freezer.state order by datetime desc limit 1")
         .then(rows => {
-            const body = {
-                isCooling: rows[0],
-            };
+            console.log("get state from db query result:", rows);
+            const body = rows[0];
             res.send(JSON.stringify(body));
         })
         .catch(error => {
