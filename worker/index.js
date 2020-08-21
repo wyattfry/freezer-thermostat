@@ -1,8 +1,19 @@
 const sensor = require('ds18x20');
 const sensorId = '28-00000b91bae7';
-const database = require('./database.js');
+// const database = require('./database.js');
 var gpiop = require('rpi-gpio').promise;
+const db = require('./data/db');
 
+(async () => {
+  try {
+    await db.testConnection();
+  } catch (e) {
+    console.log("failure", e);
+  }
+  process.exit(0);
+})();
+
+/*
 const config = {
   startCoolingTriggerTempC: -11,
   stopCoolingTriggerTempC: -12,
@@ -110,3 +121,4 @@ function stopCooling() {
       console.log("Failed to turn off relay to stop cooling", err);
     });
 }
+*/
