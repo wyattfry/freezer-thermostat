@@ -1,6 +1,8 @@
 const sensor = require('ds18x20');
+const datastore = require('../data/datastore');
+
 const sensorId = '28-00000b91bae7';
-const database = require('./database.js');
+// const database = require('./database.js');
 var gpiop = require('rpi-gpio').promise;
 
 const config = {
@@ -34,9 +36,12 @@ function readAndRecord() {
       return;
     }
 
-    const celsius = tempObj[sensorId];
+    // Get temps of all sensors, take average
+    const values = Object.values(tempObj);
+    const celsius = values.reduce((a, x) => a + x, 0) / values.length;
 
-    database.query("insert into freezer.temperature (datetime, tempC) values (current_timestamp, ?)", [celsius]);
+    // database.query("insert into freezer.temperature (datetime, tempC) values (current_timestamp, ?)", [celsius]);
+    datastore.append(`${new Date} ${celsius}`);
 
     state.currentTempC = celsius;
 
