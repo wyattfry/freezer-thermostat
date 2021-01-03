@@ -40,6 +40,9 @@ exports.readLastLines = async function (count, file = config.datastoreFileName) 
         }
     }
     const lines = content.split('\n');
+
+    await cleanupStore(lines, file);
+
     const endIdx = lines.length - 1; // last element is empty string
     let startIdx;
     if (!count || count > lines.length) {
@@ -51,4 +54,20 @@ exports.readLastLines = async function (count, file = config.datastoreFileName) 
     const sliced = lines.slice(startIdx, endIdx);
 
     return sliced.reverse();
+}
+
+async function cleanupStore(content, file = config.datastoreFileName) {
+    // If store has more lines than allowed, delete some of the oldest
+    if (content.length > config.maxLineCount) {
+        try {
+            handle = await fs.open(file, 'w');
+            await handle.writeFile(content.slice(config.deleteBatchLineCount).join('\n'));
+        } catch (error) {
+            console.log('Failed to delete old data.', error);
+        } finally {
+            if (!!handle) {
+                await handle.close();
+            }
+        }
+    }
 }

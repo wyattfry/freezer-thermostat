@@ -22,7 +22,7 @@ async function append_should_write_data() {
         console.log('Could not delete file', randomFileName);
     }
 
-    return 'append_should_write_data ... passed'
+    console.log('append_should_write_data ... passed');
 }
 
 async function append_should_not_overwrite_data() {
@@ -45,7 +45,7 @@ async function append_should_not_overwrite_data() {
         console.log('Could not delete file', randomFileName);
     }
 
-    return 'append_should_not_overwrite_data ... passed'
+    console.log('append_should_not_overwrite_data ... passed');
 }
 
 async function readLastLines_should_return_requested_number_of_lines() {
@@ -72,8 +72,44 @@ async function readLastLines_should_return_requested_number_of_lines() {
         console.log('Could not delete file', randomFileName);
     }
 
-    return 'readLastLines_should_return_requested_number_of_lines ... passed'
+    console.log('readLastLines_should_return_requested_number_of_lines ... passed');
 }
+
+async function readLastLines_should_cleanup_store_if_too_large() {
+    // Arrange
+    const randomFileName = getRandomFileName();
+    const randomContentLines = []
+    const maxLines = 60 * 24 * 7;
+    const deleteBatchLineCount = 60 * 24;
+    const expectedLineCount = maxLines + 1 - deleteBatchLineCount;
+
+    for (let i = 0; i < maxLines + 1; i++) {
+        let randomContent = '' + i + '\t' + randomString();
+        await datastore.append(randomContent, randomFileName);
+        randomContentLines.push(randomContent);
+    }
+
+    // Act
+    let content;
+    try {
+        content = await datastore.readLastLines(expectedLineCount, randomFileName);
+    } catch (error) {
+        console.log(error);
+    }
+
+    // Assert
+    assert.strictEqual(content.length, expectedLineCount)
+
+    try {
+        await fs.unlink(randomFileName);
+    } catch (error) {
+        console.log('Could not delete file', randomFileName);
+    }
+
+    console.log('readLastLines_should_cleanup_store_if_too_large ... passed');
+}
+
+// Helpers
 
 function randomString(length = 20) {
     return require('crypto')
@@ -86,9 +122,7 @@ function getRandomFileName() {
 }
 
 append_should_write_data()
-    .then(console.log)
     .then(append_should_not_overwrite_data)
-    .then(console.log)
     .then(readLastLines_should_return_requested_number_of_lines)
-    .then(console.log)
+    .then(readLastLines_should_cleanup_store_if_too_large)
     .catch(console.error);
