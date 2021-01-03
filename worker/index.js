@@ -1,8 +1,5 @@
 const sensor = require('ds18x20');
 const datastore = require('../data/datastore');
-
-const sensorId = '28-00000b91bae7';
-// const database = require('./database.js');
 var gpiop = require('rpi-gpio').promise;
 
 const config = {
