@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const port = 3000;
 const path = require('path');
-const database = require('./database.js');
+const datastore = require('../data/datastore');
 const gpiop = require('rpi-gpio').promise;
 
 const relay_pin = 11;
@@ -31,9 +31,8 @@ app.get('/temperature-history', (req, res) => {
     }
     const defaultMinutes = 90;
     const minutes = parsedMinutes || defaultMinutes;
-
-    database.query("select datetime, tempC from freezer.temperature order by datetime desc limit ?", [minutes])
-        .then(rows => res.send(JSON.stringify(rows.slice(0, minutes).reverse())))
+    datastore.readLastLines(minutes)
+        .then(rows => res.send(JSON.stringify(rows)))
         .catch(error => {
             console.error(error);
             res.statusMessage = error;

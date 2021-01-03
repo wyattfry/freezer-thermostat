@@ -50,5 +50,5 @@ exports.readLastLines = async function (count, file = config.datastoreFileName) 
 
     const sliced = lines.slice(startIdx, endIdx);
 
-    return sliced;
+    return sliced.reverse();
 }

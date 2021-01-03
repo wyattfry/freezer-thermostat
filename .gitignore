@@ -117,8 +117,12 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-node_app/config.js
-node_recorder/config.js
-node_recorder/data-kitchen-freezer.txt
-node_recorder/data.txt
-node_recorder/this_test.js
+
+# Project files
+frontend/config.js
+worker/config.js
+worker/data-kitchen-freezer.txt
+worker/data.txt
+worker/this_test.js
+data/data.txt
+tests/*.txt

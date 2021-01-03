@@ -37,7 +37,7 @@ async function append_should_not_overwrite_data() {
     const content = await datastore.readLastLines(null, randomFileName);
 
     // Assert
-    assert.deepStrictEqual(content, [randomContent1, randomContent2]);
+    assert.deepStrictEqual(content, [randomContent2, randomContent1]);
 
     try {
         await fs.unlink(randomFileName);
@@ -86,10 +86,9 @@ function getRandomFileName() {
 }
 
 append_should_write_data()
-    .then(console.log);
-
-append_should_not_overwrite_data()
-    .then(console.log);
-
-readLastLines_should_return_requested_number_of_lines()
-    .then(console.log);
+    .then(console.log)
+    .then(append_should_not_overwrite_data)
+    .then(console.log)
+    .then(readLastLines_should_return_requested_number_of_lines)
+    .then(console.log)
+    .catch(console.error);
